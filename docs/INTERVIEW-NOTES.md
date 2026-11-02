@@ -110,3 +110,31 @@ Nothing about the code was hard, but looking at it in a browser mattered: the ch
 ### Files to open
 `web/src/api.ts`, `web/src/App.tsx`, `web/src/LoanDetail.tsx`, `web/src/BalanceChart.tsx`
 
+## Phase 5: Docker and Kubernetes
+
+### What it built
+- A multi-stage Dockerfile that builds the dashboard and jar and runs as a non-root user.
+- A Compose file that runs the whole stack with one command.
+- Kubernetes manifests: Deployment, Service, ConfigMap, Secret example, HPA and Postgres StatefulSet.
+- `scripts/kind-up.sh`, which deploys to a local cluster and records the result.
+
+### Key decisions
+- **Why a StatefulSet for Postgres?** It gives a stable identity and its own volume across restarts. In production I'd use a managed database.
+- **Why a startup probe as well as liveness?** A JVM can take a while to boot. The startup probe allows that time without weakening the liveness check once it's running.
+- **Why a memory limit but no CPU limit?** A CPU limit throttles the JVM and hurts latency, while the CPU request is what the scheduler and HPA use. Memory has no such trade-off, and exceeding it should kill the pod.
+- **How is the secret handled?** The committed file is only an example. The script generates a random password and creates the secret only if it's absent, because Postgres keeps the password it first started with.
+- **Why a private kubeconfig in the script?** So running it never changes my current kubectl context.
+
+### Hardest problem
+Two problems. First, `kind load` failed with `content digest ... not found`, because Docker's containerd image store saves attestation manifests and kind imports with `--all-platforms`. Building with `--provenance=false` fixed it. Second, the deploy looked healthy, but each app pod had restarted twice. The logs showed the app starting before Postgres accepted connections, so the script now waits for Postgres first and records the restart count, which is 0 on a fresh cluster.
+
+### Likely questions
+1. **What's the difference between readiness and liveness?** Readiness decides whether a pod gets traffic; failing it just takes the pod out of the Service. Liveness decides whether to restart it. Mixing them up can turn a slow database into a restart storm.
+2. **How does the HPA decide to scale?** It compares average CPU to 70% of the CPU request, every 15 seconds or so, using metrics-server. kind doesn't include metrics-server, so the script installs it, and `<unknown>` is normal until its first scrape.
+3. **What about running several replicas with migrations?** Flyway takes a database lock, so one replica migrates while the others wait. For large migrations I'd move them to a separate job.
+4. **How did you keep the image small and safe?** The final stage has only a JRE and the jar, and it runs as a non-root user. Build tools stay in earlier stages.
+5. **What would you change for a real cluster?** A registry with versioned tags, an Ingress with TLS, a secrets manager, a PodDisruptionBudget, a managed database, and NetworkPolicies.
+
+### Files to open
+`Dockerfile`, `docker-compose.yml`, `k8s/deployment.yaml`, `k8s/hpa.yaml`, `scripts/kind-up.sh`
+
