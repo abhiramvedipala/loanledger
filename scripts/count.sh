@@ -15,4 +15,5 @@ print("endpoints:", sum(1 for ops in paths.values() for m in ops if m in methods
 suites = [ET.parse(f).getroot() for f in glob.glob("build/test-results/test/*.xml")]
 print("tests:", sum(int(s.get("tests")) for s in suites))
 print("failures:", sum(int(s.get("failures")) + int(s.get("errors")) for s in suites))
+print("mcp_tests:", open("mcp-server/test_server.py").read().count("    def test_"))
 EOF

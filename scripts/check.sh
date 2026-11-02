@@ -21,6 +21,10 @@ cleanup
 step "unit and integration tests"
 ./gradlew --no-daemon test >"$LOG" 2>&1 || fail "tests"
 
+step "MCP server installs and its tests pass"
+rm -rf mcp-server/.venv
+(cd mcp-server && python3 -m venv .venv && .venv/bin/pip install -q -r requirements.txt && .venv/bin/python -m unittest test_server) >"$LOG" 2>&1 || fail "MCP tests"
+
 step "dashboard installs and type-checks"
 rm -rf web/node_modules web/dist
 (cd web && npm ci && npm run build) >"$LOG" 2>&1 || fail "web build"
