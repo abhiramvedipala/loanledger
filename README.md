@@ -172,3 +172,11 @@ kind delete cluster --name loanledger
 scripts/results.sh
 ```
 
+## Design decisions and trade-offs
+
+All of them are in [DECISIONS.md](DECISIONS.md). The top three:
+
+1. **Money rules live in a pure class, not in the service or the entity.** `LoanState` needs no database or Spring to test, which is why I could test the allocation edge cases so cheaply. The cost is copying state between the entity and the record.
+2. **Optimistic locking rather than row locks.** Two concurrent payments on one loan are rare, so I'd rather not hold locks; the loser gets a 409 and retries. Under heavy contention on a single loan, `SELECT ... FOR UPDATE` would be the better choice.
+3. **The seed is a Flyway migration rather than a startup runner.** Flyway's lock means it runs exactly once even when several replicas start together. The trade-off is that demo data is tied to the migration history, so `FLYWAY_LOCATIONS` lets a real deployment leave it out.
+
