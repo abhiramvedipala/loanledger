@@ -57,3 +57,29 @@ Rounding at the end of a loan. A rounded payment leaves a small residual at matu
 ### Files to open
 `src/main/java/com/loanledger/domain/LoanState.java`, `domain/Amortization.java`, `domain/LoanStatus.java`, `service/LoanService.java`, `api/ProblemHandler.java`
 
+## Phase 3: Tests
+
+### What it built
+- Unit tests against the known $300,000 / 6.5% / 360-month schedule.
+- Allocation edge cases and every legal transition, plus a sample of illegal ones.
+- Testcontainers integration tests running the whole app on real Postgres.
+- `scripts/count.sh`, which reads endpoint and test counts from real output.
+
+### Key decisions
+- **Why Testcontainers rather than H2?** The schema depends on Postgres features like partial unique indexes. H2 would either fail on them or pass while behaving differently from production.
+- **Why MockMvc rather than a real HTTP client?** It runs the full Spring context and real database with less setup, and it handles PATCH without an extra client dependency. It skips the network layer, which Compose and `check.sh` cover separately.
+- **How much coverage did you aim for?** I didn't chase a percentage. One test per behavior, weighted toward the money rules.
+
+### Hardest problem
+My total-interest test failed by $3.24 against a tolerance I had guessed. Rather than widening the tolerance, I calculated the schedule separately in Python. It matched the Java exactly at $382,636.71, which showed the code was right and my expectation was wrong: $382,633.47 is the unrounded figure. I pinned the exact values, so the test ended up stricter than before.
+
+### Likely questions
+1. **How do you know the amortization is right?** The expected values come from outside the code: the standard formula and a separate Python calculation with exact decimals. Testing code against its own output proves nothing.
+2. **What's your most valuable test?** The one that pays all 360 installments through `LoanState` and compares the result to the schedule. It ties the two calculations together and caught the end-of-loan rounding issue.
+3. **Why do the integration tests share one database?** Starting one container per test is slow. Each test creates its own loan with a unique borrower, so they don't interfere, and the seed test filters to seed rows.
+4. **How do you test concurrency?** I rely on the `@Version` mechanism and the unique index rather than a timing-based test, which would be flaky. If I added one, I'd post two payments from a latch-synchronised pair of threads and assert one 409. That's a real gap.
+5. **How do you know Testcontainers works in CI?** GitHub's Ubuntu runners have Docker. Locally I had to point it at the Colima socket, because it doesn't read Docker contexts.
+
+### Files to open
+`src/test/java/com/loanledger/domain/LoanStateTest.java`, `domain/AmortizationTest.java`, `api/ApiIntegrationTest.java`, `scripts/count.sh`
+
