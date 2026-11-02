@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: loanledger
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5433/loanledger}
+    username: ${DB_USERNAME:loanledger}
+    password: ${DB_PASSWORD:local-dev-only}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    # Drop classpath:db/seed (FLYWAY_LOCATIONS) to start with an empty database.
+    locations: ${FLYWAY_LOCATIONS:classpath:db/migration,classpath:db/seed}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
