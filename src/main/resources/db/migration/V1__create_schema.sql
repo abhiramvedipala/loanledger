@@ -28,3 +28,16 @@ CREATE TABLE loans (
 );
 CREATE INDEX loans_status_idx ON loans (status);
 CREATE INDEX loans_borrower_idx ON loans (borrower_id);
+
+CREATE TABLE payments (
+    id               BIGSERIAL PRIMARY KEY,
+    loan_id          BIGINT         NOT NULL REFERENCES loans (id),
+    payment_date     DATE           NOT NULL,
+    amount           NUMERIC(14, 2) NOT NULL CHECK (amount > 0),
+    principal_amount NUMERIC(14, 2) NOT NULL CHECK (principal_amount >= 0),
+    interest_amount  NUMERIC(14, 2) NOT NULL CHECK (interest_amount >= 0),
+    escrow_amount    NUMERIC(14, 2) NOT NULL CHECK (escrow_amount >= 0),
+    created_at       TIMESTAMPTZ    NOT NULL DEFAULT now(),
+    CHECK (amount = principal_amount + interest_amount + escrow_amount)
+);
+CREATE INDEX payments_loan_date_idx ON payments (loan_id, payment_date DESC, id DESC);
