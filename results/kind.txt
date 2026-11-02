@@ -1,0 +1,5 @@
+health: UP
+loans: 50
+ready_replicas: 2/2
+restarts: 0
+kubernetes: v1.37.0
