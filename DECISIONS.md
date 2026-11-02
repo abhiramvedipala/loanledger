@@ -14,3 +14,9 @@ One line each: decision + why.
 - Loan status and case status share one enum, and the loan follows its open case, because the prompt defines one state machine.
 - Added `POST /loans/{id}/payments/simulate`, because the read-only MCP `simulate_payment` tool must call the REST API without saving anything.
 - Integration tests use MockMvc on the full Spring context, because it needs no extra HTTP client for PATCH and still hits real Postgres.
+- MCP SDK pinned to 2.3.0 and tested with stdlib `unittest`, because 2.x renamed its server API and three small tools don't need a test framework.
+- `kind-up.sh` builds with `--provenance=false` and lets the cluster pull Postgres, because `kind load` fails on Docker's attestation manifests.
+- `kind-up.sh` uses a private kubeconfig, so running it never changes the current kubectl context.
+- The dashboard has no router or chart library, because two pages and one line chart don't justify the dependencies.
+- The unpushed history was rebuilt into small commits starting with `.gitignore`, because the commit rules changed before anything was pushed; the original stays on the local `backup/original-history` branch.
+- `CLAUDE.md` stays out of the repo, next to `PROMPT.md`, because both are private working instructions.
