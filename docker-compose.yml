@@ -17,5 +17,24 @@ services:
       timeout: 3s
       retries: 20
 
+  app:
+    build: .
+    image: loanledger:local
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-loanledger}
+      DB_USERNAME: ${POSTGRES_USER:-loanledger}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-local-dev-only}
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health/readiness | grep -q UP"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 10s
+
 volumes:
   db-data:
