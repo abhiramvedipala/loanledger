@@ -4,7 +4,7 @@ import { money, ScheduleRow } from "./api";
 const WIDTH = 720;
 const HEIGHT = 240;
 const LEFT = 64;
-const RIGHT = 12;
+const RIGHT = 24;
 const TOP = 12;
 const BOTTOM = 28;
 
