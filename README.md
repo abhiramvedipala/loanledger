@@ -136,3 +136,39 @@ Important rules are enforced by Postgres as well as the code. A payment row can'
 error: Error executing tool get_loan: Loan 999999 not found
 ```
 
+## Testing
+
+```bash
+export JAVA_HOME="$(brew --prefix openjdk@21)"
+```
+
+```bash
+./gradlew test
+```
+
+```bash
+scripts/count.sh
+```
+
+```bash
+scripts/check.sh
+```
+
+The unit tests cover the known $300,000 / 6.5% / 360-month schedule, allocation edge cases (partial payments stopping in each bucket, overpayment, exact payoff, rejections, a full 360-payment run) and the state machine. The integration tests use Testcontainers to run the whole app on real Postgres, including the migrations and seed. The current counts are in the Results table.
+
+`scripts/check.sh` is the definition of working. From a clean state it runs the tests, installs and builds everything, brings the stack up with the Quick start command, checks health, the seed and the dashboard, verifies the results files, and requires git to be clean and pushed. It prints `PASS` or the first failure.
+
+To deploy to a local Kubernetes cluster and re-measure:
+
+```bash
+scripts/kind-up.sh
+```
+
+```bash
+kind delete cluster --name loanledger
+```
+
+```bash
+scripts/results.sh
+```
+
