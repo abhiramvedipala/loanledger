@@ -29,3 +29,31 @@ The app failed to start with `role "loanledger" does not exist`, even though Com
 ### Files to open
 `src/main/resources/db/migration/V1__create_schema.sql`, `src/main/java/db/seed/V2__seed_demo_data.java`, `src/main/resources/application.yml`, `scripts/check.sh`
 
+## Phase 2: Domain and API
+
+### What it built
+- Fixed-rate amortization with exact decimal arithmetic.
+- Payment allocation of interest, then principal, then escrow, including partial payments and overpayments.
+- The loss-mitigation state machine with illegal transitions rejected.
+- Paginated `/api/v1` endpoints, RFC 7807 errors and Swagger UI.
+
+### Key decisions
+- **Why is `LoanState` a pure record?** The money rules are the part most likely to be wrong and most expensive if they are. With no framework, they are simple to test exhaustively, and the API, simulate and seed all share them.
+- **Why optimistic locking rather than `SELECT FOR UPDATE`?** Two concurrent payments on one loan are rare, so I'd rather not hold row locks. The loser gets a 409 and retries. With heavy contention on a single row, I'd switch.
+- **Why offset paging rather than keyset?** It's simple, it supports jumping to a page, and it's fine at this size. Keyset is the upgrade if the table reaches millions of rows.
+- **Why 409 for an illegal transition rather than 400?** The request is well formed; it conflicts with the resource's current state. The body lists the allowed states so the client knows what to do.
+- **Why is an overpayment above payoff rejected?** I have no unapplied-funds bucket, and silently keeping a borrower's money would be the worst option. A 422 forces a person to deal with it.
+
+### Hardest problem
+Rounding at the end of a loan. A rounded payment leaves a small residual at maturity, which would have created a tiny 361st installment. The fix was to pass the maturity date in `Terms` so the last installment takes the whole remaining balance, which is what the schedule does. A test now pays all 360 installments and checks that it ends at zero with the same total interest as the schedule.
+
+### Likely questions
+1. **Walk me through posting a payment.** Validation runs at the controller. The service loads the loan and escrow, checks the date and that the loan isn't paid off, and calls `LoanState.apply`. It then updates the loan and escrow and saves the payment in one transaction, and the `@Version` column catches a concurrent change.
+2. **Why does simulate exist?** So a read-only caller can preview an allocation. It runs the same compute method as a real post and just doesn't save, so a simulation can't disagree with the real result.
+3. **How did you avoid N+1 queries on the list?** The list needs the borrower's name, so the repository uses an `@EntityGraph` to fetch the borrower in a single join. Open-in-view is off, so an accidental lazy load in a controller fails loudly rather than quietly running more queries.
+4. **Why not return entities from controllers?** That would tie the JSON contract to the schema and risk exposing fields by accident. Records make the contract explicit.
+5. **What's missing for production?** Authentication first, then idempotency keys so a retried POST can't post twice, then daily interest, fees and escrow disbursements.
+
+### Files to open
+`src/main/java/com/loanledger/domain/LoanState.java`, `domain/Amortization.java`, `domain/LoanStatus.java`, `service/LoanService.java`, `api/ProblemHandler.java`
+
