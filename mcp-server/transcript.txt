@@ -1,0 +1,59 @@
+tools: get_loan, list_delinquent_loans, simulate_payment 
+
+> list_delinquent_loans({"size": 2})
+{
+  "totalElements": 7,
+  "content": [
+    {
+      "id": 6,
+      "loanNumber": "LL-000006",
+      "status": "DELINQUENT",
+      "currentBalance": 584348.57,
+      "nextDueDate": "2025-10-06",
+      "interestDue": 306.1,
+      "principalDue": 643.08,
+      "escrowDue": 713.42
+    },
+    {
+      "id": 8,
+      "loanNumber": "LL-000008",
+      "status": "DELINQUENT",
+      "currentBalance": 257391.28,
+      "nextDueDate": "2025-10-08",
+      "interestDue": 58.26,
+      "principalDue": 296.54,
+      "escrowDue": 392.83
+    }
+  ]
+} 
+
+> get_loan({"loan_id": 6})
+{
+  "id": 6,
+  "loanNumber": "LL-000006",
+  "status": "DELINQUENT",
+  "currentBalance": 584348.57,
+  "nextDueDate": "2025-10-06",
+  "interestDue": 306.1,
+  "principalDue": 643.08,
+  "escrowDue": 713.42
+} 
+
+> simulate_payment({"loan_id": 6, "amount": 1662.6, "payment_date": "2025-12-01"})
+{
+  "paymentId": null,
+  "loanId": 6,
+  "paymentDate": "2025-12-01",
+  "amount": 1662.6,
+  "interest": 306.1,
+  "principal": 643.08,
+  "escrow": 713.42,
+  "extraPrincipal": 0.0,
+  "shortfall": 0.0,
+  "balanceAfter": 583705.49,
+  "nextDueDateAfter": "2025-11-06"
+} 
+
+> get_loan({"loan_id": 999999})
+error: Error executing tool get_loan: Loan 999999 not found
+
