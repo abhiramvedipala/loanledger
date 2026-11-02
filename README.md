@@ -57,3 +57,17 @@ A request hits a controller, where Bean Validation rejects bad input as an RFC 7
 | k6 | Load test | Scriptable, and its JSON summary feeds `RESULTS.md` directly |
 | Python MCP SDK | Read-only tool server | Lets MCP clients query loans through the API's rules |
 
+## Quick start
+
+Prerequisite: Docker. Then:
+
+```bash
+docker compose up --build
+```
+
+- Dashboard: <http://localhost:8080/>
+- Swagger UI: <http://localhost:8080/swagger-ui.html>
+- Health: <http://localhost:8080/actuator/health>
+
+Postgres is published on host port 5433. Set `APP_PORT` or `DB_PORT` if those ports are taken. To run the tests or the checks you also need Java 21 (`brew install openjdk@21`, then set `JAVA_HOME`), Node 22 and Python 3.
+
