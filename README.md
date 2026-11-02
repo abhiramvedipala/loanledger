@@ -12,3 +12,13 @@ After a mortgage closes, a servicer collects the payments for the next 30 years.
 
 LoanLedger is a small version of that system for a servicing operations team. I built it to practice the parts of backend work that matter when the data is money: exact decimal arithmetic, invariants enforced in the database, concurrency safety and clear API errors.
 
+## Demo
+
+Loans table with status chips:
+
+![Loans table](docs/loans-table.jpg)
+
+Loan detail with the balance chart, payment form and loss-mitigation actions:
+
+![Loan detail](docs/loan-detail.jpg)
+
