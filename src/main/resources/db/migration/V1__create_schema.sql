@@ -41,3 +41,12 @@ CREATE TABLE payments (
     CHECK (amount = principal_amount + interest_amount + escrow_amount)
 );
 CREATE INDEX payments_loan_date_idx ON payments (loan_id, payment_date DESC, id DESC);
+
+CREATE TABLE escrow_accounts (
+    id               BIGSERIAL PRIMARY KEY,
+    loan_id          BIGINT         NOT NULL UNIQUE REFERENCES loans (id),
+    balance          NUMERIC(14, 2) NOT NULL DEFAULT 0,
+    monthly_amount   NUMERIC(14, 2) NOT NULL CHECK (monthly_amount >= 0),
+    annual_tax       NUMERIC(14, 2) NOT NULL CHECK (annual_tax >= 0),
+    annual_insurance NUMERIC(14, 2) NOT NULL CHECK (annual_insurance >= 0)
+);
