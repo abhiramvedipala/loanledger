@@ -8,4 +8,4 @@
 - [x] 6. CI: GitHub Actions build, test, Docker build; README badge
 - [x] 7. MCP server (optional, after everything else passes): Python, read-only `get_loan`, `list_delinquent_loans`, `simulate_payment`; transcript in README
 - [x] 8. Load test + results: 30-second k6 run against Compose; `RESULTS.md`
-- [ ] 9. Definition of done: `scripts/check.sh` passes 3x from a fresh clone, README complete, morning summary
+- [x] 9. Definition of done: `scripts/check.sh` passes 3x from a fresh clone with the push check skipped, README complete, morning summary. The push itself is under "Needs Abhiram" in `PROGRESS.md`
