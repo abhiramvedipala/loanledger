@@ -40,3 +40,20 @@ flowchart LR
 
 A request hits a controller, where Bean Validation rejects bad input as an RFC 7807 problem. The service loads the loan and hands its state to `LoanState`, a pure class that holds the money rules. The service then saves the new state and the payment in one transaction, and a `@Version` column turns a concurrent write into a 409. Spring serves the built dashboard from the same jar, so there is a single deployable, which runs under Compose or Kubernetes.
 
+## Tech stack
+
+| Tool | What it's used for | Why I chose it |
+|---|---|---|
+| Java 21, Spring Boot 3.5 | REST service | Mature, typed, and standard for financial backends |
+| Spring Data JPA, Hibernate | Persistence | Optimistic locking and paging with little code; schema validation only |
+| PostgreSQL 16 | System of record | `NUMERIC` money, check constraints and partial unique indexes |
+| Flyway | Migrations and seed | Versioned schema, and its lock makes the seed safe with several replicas |
+| springdoc-openapi | Swagger UI and OpenAPI JSON | Docs generated from the code can't drift from it |
+| JUnit 5, Testcontainers | Tests | Integration tests run on real Postgres, not an in-memory lookalike |
+| React, TypeScript, Vite | Dashboard | Typed client and a fast build; no router or chart library was needed |
+| Docker, Compose | Packaging and local run | One command runs the whole stack |
+| Kubernetes, kind | Deployment | Real manifests with probes and autoscaling, testable on a laptop |
+| GitHub Actions | CI | Build, test and image build on every push |
+| k6 | Load test | Scriptable, and its JSON summary feeds `RESULTS.md` directly |
+| Python MCP SDK | Read-only tool server | Lets MCP clients query loans through the API's rules |
+
