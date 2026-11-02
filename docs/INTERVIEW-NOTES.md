@@ -138,3 +138,28 @@ Two problems. First, `kind load` failed with `content digest ... not found`, bec
 ### Files to open
 `Dockerfile`, `docker-compose.yml`, `k8s/deployment.yaml`, `k8s/hpa.yaml`, `scripts/kind-up.sh`
 
+## Phase 6: CI
+
+### What it built
+- A GitHub Actions workflow that runs on every push and pull request.
+- Separate jobs for build and test, the MCP server, and the Docker image.
+- A status badge in the README.
+
+### Key decisions
+- **Why separate jobs?** A failed image build reads differently from a failed test, and they run in parallel.
+- **Why doesn't CI push an image?** There's no registry account to push to, and it needs no secrets this way. It's a small addition when there is one.
+- **Why doesn't CI run `check.sh`?** That script also verifies local state such as `git status` and pushed commits. The workflow covers what's meaningful on a runner, and the Docker job proves the image builds.
+
+### Hardest problem
+This was a matter of honesty more than difficulty: the workflow can't be proven until the repo is on GitHub and it has run. I treat it as unverified until the first green run rather than assuming it works.
+
+### Likely questions
+1. **How do integration tests run in CI?** Testcontainers uses the Docker daemon that GitHub's Ubuntu runners provide, with no service containers configured.
+2. **How do you keep builds fast?** `setup-gradle` caches dependencies, and the jobs run in parallel.
+3. **What would you add next?** Publishing an image on merge, a dependency scan, an image scan like Trivy, and a deploy step.
+4. **How would you do deployment?** Build one image per commit, promote that same image between environments, and run a rolling update guarded by the readiness probe.
+5. **What does the badge really tell you?** Only that the latest run on the default branch passed. It says nothing about coverage or production health.
+
+### Files to open
+`.github/workflows/ci.yml`
+
