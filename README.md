@@ -191,3 +191,22 @@ All of them are in [DECISIONS.md](DECISIONS.md). The top three:
 - **On a phone, the chart's axis labels get small,** because the SVG scales down as a whole.
 - **Postgres runs in the cluster for the demo.** In production I would use a managed database.
 
+## Project structure
+
+```text
+.
+├── src/main/java/com/loanledger/
+│   ├── domain/        pure rules (Amortization, LoanState, LoanStatus), entities, repositories
+│   ├── service/       transactions and rules that need the database
+│   └── api/           controllers, request and response records, Problem Details
+├── src/main/java/db/seed/          deterministic seed migration
+├── src/main/resources/db/migration/  schema
+├── src/test/          unit and Testcontainers tests
+├── web/               React dashboard
+├── mcp-server/        read-only MCP server, tests and transcript
+├── k8s/               Deployment, Service, ConfigMap, Secret example, HPA, Postgres
+├── scripts/           check, count, kind-up, loadtest, results
+├── results/           raw results that RESULTS.md is rendered from
+├── docs/              screenshots and interview notes
+└── .github/workflows/ CI
+```
