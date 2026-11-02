@@ -1,0 +1,8 @@
+.git
+.gradle
+.serena
+build
+web/node_modules
+web/dist
+.env
+PROMPT.md
