@@ -1,0 +1,34 @@
+# secrets
+.env
+
+# python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# data and model weights
+data/raw/
+*.safetensors
+*.ckpt
+*.pt
+
+# java
+.gradle/
+build/
+*.class
+
+# web
+node_modules/
+web/dist/
+src/main/resources/static/
+
+# local
+.DS_Store
+.idea/
+.vscode/
+*.iml
+.claude/
+.serena/
+PROMPT.md
+CLAUDE.md
