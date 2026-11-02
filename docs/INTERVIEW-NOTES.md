@@ -188,3 +188,27 @@ The current SDK is 2.x, which renamed `FastMCP` to `MCPServer`, so I pinned the 
 ### Files to open
 `mcp-server/server.py`, `mcp-server/test_server.py`, `mcp-server/transcript.txt`
 
+## Phase 8: Load test and results
+
+### What it built
+- A 30-second k6 run on `GET /api/v1/loans` with 20 virtual users.
+- `scripts/results.sh`, which measures everything and renders `RESULTS.md`.
+- A generated results table in the README, with `check.sh` failing if either file drifts.
+
+### Key decisions
+- **Why generate `RESULTS.md`?** Every number I quote has to trace back to a run. Generating the document from raw files makes a hand-edited number show up as a failed check.
+- **Why no think time in the test?** I want the most the stack can serve under this load. It doesn't model real users, and I say so.
+- **Why k6 rather than hey?** Its JSON summary feeds the results script directly, and the test is a script that can grow.
+
+### Hardest problem
+Being honest about what the number means. k6, the app and Postgres all shared one laptop, inside a VM that other containers were also using, so the load generator was competing with the system it was measuring. I record that next to the numbers and call it a baseline, not a capacity claim.
+
+### Likely questions
+1. **Why p95 rather than average?** An average hides the slow requests users actually notice. p95 shows what the slowest 5% are close to.
+2. **What limits throughput here?** I haven't profiled it, so I wouldn't claim one. My first checks would be Hikari pool saturation, query time including the count query, and CPU in the VM.
+3. **How would you make the list endpoint faster?** First measure it. Candidates are skipping the `COUNT(*)` that each page runs, keyset paging, and a smaller response.
+4. **How would you run a more realistic test?** On separate machines, with think time and a mix of reads and writes, a warmed JVM, and a realistic table size rather than 50 loans.
+5. **Would the result change with more data?** Yes. With 50 rows nearly everything is cached and the count is trivial. I'd seed millions of rows before drawing conclusions about scale.
+
+### Files to open
+`scripts/loadtest.js`, `scripts/results.sh`, `scripts/render_results.py`, `RESULTS.md`
