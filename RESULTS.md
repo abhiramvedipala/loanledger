@@ -14,6 +14,7 @@ scripts/results.sh
 | API endpoints (OpenAPI operations) | 11 | `scripts/count.sh` |
 | Automated tests | 38 | `scripts/count.sh` |
 | Test failures | 0 | `scripts/count.sh` |
+| MCP server tests | 4 | `scripts/count.sh` |
 | `GET /api/v1/loans` p95 latency | 61.77 ms | `scripts/results.sh` |
 | `GET /api/v1/loans` median latency | 19.64 ms | `scripts/results.sh` |
 | Throughput | 788 requests/s | `scripts/results.sh` |

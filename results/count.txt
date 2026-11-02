@@ -1,3 +1,4 @@
 endpoints: 11
 tests: 38
 failures: 0
+mcp_tests: 4
