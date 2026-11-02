@@ -22,3 +22,21 @@ Loan detail with the balance chart, payment form and loss-mitigation actions:
 
 ![Loan detail](docs/loan-detail.jpg)
 
+## Architecture
+
+```mermaid
+flowchart LR
+    Browser["React dashboard"] -->|"REST /api/v1"| App
+    MCP["MCP server (read-only tools)"] -->|"REST /api/v1"| App
+    K6["k6 load test"] -->|"GET /api/v1/loans"| App
+    subgraph App["Spring Boot service"]
+        Controllers --> Services
+        Services --> Domain["Pure domain rules: Amortization, LoanState, LoanStatus"]
+        Services --> Repositories["JPA repositories"]
+    end
+    Repositories --> Postgres[("PostgreSQL 16")]
+    Flyway["Flyway migrations and seed"] --> Postgres
+```
+
+A request hits a controller, where Bean Validation rejects bad input as an RFC 7807 problem. The service loads the loan and hands its state to `LoanState`, a pure class that holds the money rules. The service then saves the new state and the payment in one transaction, and a `@Version` column turns a concurrent write into a 409. Spring serves the built dashboard from the same jar, so there is a single deployable, which runs under Compose or Kubernetes.
+
