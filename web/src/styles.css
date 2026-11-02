@@ -1,0 +1,109 @@
+:root {
+  color-scheme: light dark;
+  --surface: #ffffff;
+  --raised: #f6f7f8;
+  --ink: #1b1f24;
+  --muted: #5b6570;
+  --line: #dde1e6;
+  --accent: #1f5fbf;
+  --error: #b3261e;
+  --good-bg: #e3f4e8;
+  --good-ink: #17602f;
+  --warn-bg: #fdf0d5;
+  --warn-ink: #7a5200;
+  --serious-bg: #fde4e1;
+  --serious-ink: #99231b;
+  --neutral-bg: #e8eaee;
+  --neutral-ink: #3b444e;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --surface: #14171b;
+    --raised: #1d2126;
+    --ink: #e8eaed;
+    --muted: #9aa4af;
+    --line: #2f353c;
+    --accent: #7fb0f5;
+    --error: #ff8a80;
+    --good-bg: #173423;
+    --good-ink: #8fdca8;
+    --warn-bg: #3a2c0c;
+    --warn-ink: #f0cd7c;
+    --serious-bg: #451b18;
+    --serious-ink: #ffb0a8;
+    --neutral-bg: #2b3037;
+    --neutral-ink: #c9cfd6;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--surface);
+  color: var(--ink);
+  font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+main { max-width: 1040px; margin: 0 auto; padding: 16px; }
+header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 12px; margin-bottom: 16px; }
+h1 { font-size: 22px; margin: 0; }
+h1 a { color: inherit; text-decoration: none; }
+h2 { font-size: 17px; margin: 24px 0 8px; }
+a { color: var(--accent); }
+.muted { color: var(--muted); }
+.error { color: var(--error); margin: 8px 0; }
+
+.toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 12px 0; }
+.title-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.title-row h2 { margin: 0; }
+
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; }
+.schedule { max-height: 360px; overflow-y: auto; }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 8px 12px; text-align: left; white-space: nowrap; border-bottom: 1px solid var(--line); }
+tbody tr:last-child td { border-bottom: 0; }
+th { background: var(--raised); color: var(--muted); font-size: 13px; font-weight: 600; position: sticky; top: 0; }
+.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+.chip { display: inline-block; padding: 1px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+.chip-current { background: var(--good-bg); color: var(--good-ink); }
+.chip-delinquent { background: var(--serious-bg); color: var(--serious-ink); }
+.chip-forbearance, .chip-modification { background: var(--warn-bg); color: var(--warn-ink); }
+.chip-resolved { background: var(--neutral-bg); color: var(--neutral-ink); }
+
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin: 16px 0; }
+.facts dt { color: var(--muted); font-size: 13px; }
+.facts dd { margin: 0; font-size: 17px; font-variant-numeric: tabular-nums; }
+
+.chart { margin: 16px 0; }
+.chart figcaption { font-weight: 600; margin-bottom: 4px; }
+.chart-plot { position: relative; }
+.chart svg { display: block; width: 100%; height: auto; touch-action: none; }
+.grid { stroke: var(--line); stroke-width: 1; }
+.tick { fill: var(--muted); font-size: 12px; }
+.series { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; }
+.crosshair { stroke: var(--muted); stroke-width: 1; }
+.marker { fill: var(--accent); stroke: var(--surface); stroke-width: 2; }
+.tooltip {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  padding: 4px 8px;
+  background: var(--raised);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.columns { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
+form label { display: block; margin: 8px 0; }
+input, select, button { font: inherit; color: inherit; }
+input { display: block; width: 100%; max-width: 280px; padding: 6px 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
+select { padding: 4px 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
+button { padding: 6px 14px; background: var(--raised); border: 1px solid var(--line); border-radius: 6px; cursor: pointer; }
+button:disabled { opacity: 0.5; cursor: default; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
