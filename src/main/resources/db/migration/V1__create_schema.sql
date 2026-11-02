@@ -50,3 +50,16 @@ CREATE TABLE escrow_accounts (
     annual_tax       NUMERIC(14, 2) NOT NULL CHECK (annual_tax >= 0),
     annual_insurance NUMERIC(14, 2) NOT NULL CHECK (annual_insurance >= 0)
 );
+
+CREATE TABLE loss_mitigation_cases (
+    id          BIGSERIAL PRIMARY KEY,
+    loan_id     BIGINT      NOT NULL REFERENCES loans (id),
+    status      VARCHAR(20) NOT NULL CHECK (status IN ('CURRENT', 'DELINQUENT', 'FORBEARANCE', 'MODIFICATION', 'RESOLVED')),
+    notes       TEXT,
+    opened_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+    resolved_at TIMESTAMPTZ
+);
+CREATE INDEX loss_mitigation_cases_loan_idx ON loss_mitigation_cases (loan_id);
+-- A loan has at most one open case; the database enforces it so concurrent opens can't race.
+CREATE UNIQUE INDEX loss_mitigation_one_open_case ON loss_mitigation_cases (loan_id) WHERE resolved_at IS NULL;
