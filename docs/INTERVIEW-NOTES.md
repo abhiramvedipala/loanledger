@@ -163,3 +163,28 @@ This was a matter of honesty more than difficulty: the workflow can't be proven 
 ### Files to open
 `.github/workflows/ci.yml`
 
+## Phase 7: MCP server
+
+### What it built
+- A tiny Python server exposing `get_loan`, `list_delinquent_loans` and `simulate_payment`.
+- Unit tests against a stub HTTP server.
+- A demo client and a transcript from a real session against Compose.
+
+### Key decisions
+- **Why call the API rather than the database?** All the rules and validation stay in one place, and the server can't bypass them.
+- **How is it read-only?** It has no tool that posts a payment. Its only POST goes to the simulate endpoint, which saves nothing. An integration test confirms that simulate leaves the balance and history unchanged.
+- **Why stdlib `urllib`?** It avoids a dependency for three simple calls.
+
+### Hardest problem
+The current SDK is 2.x, which renamed `FastMCP` to `MCPServer`, so I pinned the version. More interesting: running the demo showed an unknown loan returning only "Error executing tool", because a plain exception is treated as unexpected and its message is hidden. Raising `ToolError` passes the API's explanation through. The unit test had missed it because it calls the function directly, which is why I ran a real client too.
+
+### Likely questions
+1. **What is MCP?** The Model Context Protocol is a standard way for a client to discover and call tools on a server, here over stdio. Each tool's name, description and parameters come from the Python function.
+2. **Why offer simulate rather than a post tool?** Moving money should need an explicit, authenticated action by a person. A preview is useful and carries no risk.
+3. **How would you secure it?** Today it has the same limit as the API: no authentication. I'd give it its own read-only API credential.
+4. **How did you test it?** Unit tests check each tool's request and error handling against a stub, and the demo exercises the real protocol against the real API.
+5. **Why is the amount a float here?** It's only a JSON number sent to the API, which validates it to two decimal places and does the real calculation with `BigDecimal`.
+
+### Files to open
+`mcp-server/server.py`, `mcp-server/test_server.py`, `mcp-server/transcript.txt`
+
