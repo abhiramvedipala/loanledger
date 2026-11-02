@@ -71,3 +71,26 @@ docker compose up --build
 
 Postgres is published on host port 5433. Set `APP_PORT` or `DB_PORT` if those ports are taken. To run the tests or the checks you also need Java 21 (`brew install openjdk@21`, then set `JAVA_HOME`), Node 22 and Python 3.
 
+## Results
+
+Every number comes from a script. This table is generated, and `scripts/check.sh` fails if it drifts from the raw files in `results/`. See [RESULTS.md](RESULTS.md) for how to re-run them and what the load test numbers do and don't mean.
+
+<!-- results:start -->
+| Metric | Value | Source |
+|---|---|---|
+| API endpoints (OpenAPI operations) | 11 | `scripts/count.sh` |
+| Automated tests | 38 | `scripts/count.sh` |
+| Test failures | 0 | `scripts/count.sh` |
+| MCP server tests | 4 | `scripts/count.sh` |
+| `GET /api/v1/loans` p95 latency | 61.77 ms | `scripts/results.sh` |
+| `GET /api/v1/loans` median latency | 19.64 ms | `scripts/results.sh` |
+| Throughput | 788 requests/s | `scripts/results.sh` |
+| Requests in the 30-second run | 23672 | `scripts/results.sh` |
+| Failed requests | 0.00% | `scripts/results.sh` |
+| kind deploy: health | UP | `scripts/kind-up.sh` |
+| kind deploy: ready replicas | 2/2 | `scripts/kind-up.sh` |
+| kind deploy: app pod restarts during rollout | 0 | `scripts/kind-up.sh` |
+| kind deploy: seeded loans via the Service | 50 | `scripts/kind-up.sh` |
+| kind deploy: Kubernetes version | v1.37.0 | `scripts/kind-up.sh` |
+<!-- results:end -->
+
