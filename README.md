@@ -180,3 +180,14 @@ All of them are in [DECISIONS.md](DECISIONS.md). The top three:
 2. **Optimistic locking rather than row locks.** Two concurrent payments on one loan are rare, so I'd rather not hold locks; the loser gets a 409 and retries. Under heavy contention on a single loan, `SELECT ... FOR UPDATE` would be the better choice.
 3. **The seed is a Flyway migration rather than a startup runner.** Flyway's lock means it runs exactly once even when several replicas start together. The trade-off is that demo data is tied to the migration history, so `FLYWAY_LOCATIONS` lets a real deployment leave it out.
 
+## Known limits and next steps
+
+- **No authentication.** Anyone who can reach the API can post payments. Spring Security with OAuth2 and role-based access is the first thing I would add before real use.
+- **Double posting is possible.** A client that retries a successful POST creates a second payment. An idempotency key on the payment endpoint would fix it.
+- **Delinquency isn't automatic.** A loan only becomes DELINQUENT through a case; nothing checks due dates on a schedule. A daily job would.
+- **Interest is simplified.** It is monthly on the balance, with no daily accrual, late fees or escrow disbursements.
+- **A modification doesn't change the loan's terms.** It is tracked as a status only, and RESOLVED is terminal.
+- **Load test numbers are one laptop's baseline.** The load generator, app and database shared one machine, with other containers running.
+- **On a phone, the chart's axis labels get small,** because the SVG scales down as a whole.
+- **Postgres runs in the cluster for the demo.** In production I would use a managed database.
+
