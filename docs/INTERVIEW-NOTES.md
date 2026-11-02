@@ -83,3 +83,30 @@ My total-interest test failed by $3.24 against a tolerance I had guessed. Rather
 ### Files to open
 `src/test/java/com/loanledger/domain/LoanStateTest.java`, `domain/AmortizationTest.java`, `api/ApiIntegrationTest.java`, `scripts/count.sh`
 
+## Phase 4: React dashboard
+
+### What it built
+- A loans table with status chips, a filter and paging.
+- A loan detail page with schedule, balance chart and payment history.
+- A validated post-payment form and loss-mitigation actions.
+- A build served by Spring under `/`.
+
+### Key decisions
+- **Why no router or chart library?** Two pages and one line chart don't justify the dependencies. Hash routing also means Spring needs no fallback route, and the chart is under 100 lines of SVG.
+- **Why validate on both client and server?** Client validation gives fast feedback; the server is the actual rule. Server errors still appear in the form through the Problem Details message.
+- **Why repeat the transition map in the client?** Only to decide which buttons to show. The server enforces the rules, so if the two ever disagreed the result would be a clear error, not a bad state.
+- **Why icons on status chips?** So status isn't carried by colour alone, which matters for colour-blind users.
+
+### Hardest problem
+Nothing about the code was hard, but looking at it in a browser mattered: the chart's last year label was clipped, which no type-check would catch. I also tested the flows for real, posting a payment on a partly paid installment and confirming the split and the new due date against the API.
+
+### Likely questions
+1. **Why is the payment form keyed by balance?** The key resets the form after a successful post, so the default amount reflects the new amount due.
+2. **How does a double click not post twice?** The button is disabled while the request is in flight. That only covers the UI; the API still needs an idempotency key, which is listed as a known limit.
+3. **How is the chart accessible?** The SVG has an `aria-label` that summarises it, and the schedule table on the same page contains the same data as text.
+4. **Why serve the UI from Spring rather than a CDN?** One deployable is simpler for a project this size, with no CORS to configure. At scale I'd serve static assets from a CDN.
+5. **How do you handle dark mode?** With CSS variables and a separately chosen dark palette through `prefers-color-scheme`, rather than an automatic inversion.
+
+### Files to open
+`web/src/api.ts`, `web/src/App.tsx`, `web/src/LoanDetail.tsx`, `web/src/BalanceChart.tsx`
+
