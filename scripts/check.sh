@@ -11,10 +11,7 @@ if brew --prefix openjdk@21 >/dev/null 2>&1; then export JAVA_HOME="$(brew --pre
 LOG="$(mktemp)"
 fail() { echo "FAIL: $1 (log: $LOG)"; tail -30 "$LOG"; exit 1; }
 step() { echo "== $1"; }
-cleanup() {
-  [ -n "${APP_PID:-}" ] && kill "$APP_PID" 2>/dev/null
-  docker compose down -v >/dev/null 2>&1
-}
+cleanup() { docker compose down -v >/dev/null 2>&1; }
 trap cleanup EXIT
 
 step "clean state"
@@ -24,17 +21,22 @@ cleanup
 step "unit and integration tests"
 ./gradlew --no-daemon test >"$LOG" 2>&1 || fail "tests"
 
-step "service runs and answers"
-./gradlew --no-daemon bootJar >"$LOG" 2>&1 || fail "bootJar"
-docker compose up -d --wait db >"$LOG" 2>&1 || fail "compose up db"
-SERVER_PORT=$APP_PORT DB_URL="jdbc:postgresql://localhost:$DB_PORT/loanledger" \
-  "${JAVA_HOME:+$JAVA_HOME/bin/}java" -jar build/libs/loanledger-0.1.0.jar >"$LOG" 2>&1 &
-APP_PID=$!
+step "dashboard installs and type-checks"
+rm -rf web/node_modules web/dist
+(cd web && npm ci && npm run build) >"$LOG" 2>&1 || fail "web build"
+
+step "README's one command brings up the stack"
+docker compose up --build -d --wait >"$LOG" 2>&1 || fail "docker compose up"
 BASE="http://localhost:$APP_PORT"
-for _ in $(seq 1 60); do curl -sf "$BASE/actuator/health" >/dev/null && break; sleep 2; done
 curl -sf "$BASE/actuator/health" | grep -q '"status":"UP"' || fail "health not UP"
 curl -sf "$BASE/api/v1/loans?size=1" | grep -q '"totalElements":50' || fail "seed: expected 50 loans"
+ASSET="$(curl -sf "$BASE/" | grep -o '/assets/[^"]*\.js')" || fail "dashboard not served at /"
+curl -sf "$BASE$ASSET" | grep -q 'LoanLedger' || fail "dashboard bundle not served"
 cleanup
+
+step "RESULTS.md comes from the scripts"
+python3 scripts/render_results.py --check >"$LOG" 2>&1 || fail "RESULTS.md does not match results/"
+[ "$(scripts/count.sh)" = "$(cat results/count.txt)" ] || { scripts/count.sh > "$LOG"; fail "results/count.txt is stale; rerun scripts/results.sh"; }
 
 step "git clean"
 [ -z "$(git status --porcelain)" ] || { git status --short > "$LOG"; fail "uncommitted changes"; }
