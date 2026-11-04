@@ -2,29 +2,18 @@
 
 ## Done
 - All eight phases, including the optional MCP server.
-- `scripts/check.sh` passed three times in a row from fresh clones, with its push step skipped (see "Needs Abhiram").
+- Pushed to github.com/abhiramvedipala/loanledger; first CI run green.
+- `scripts/check.sh` passed three times in a row from fresh clones, with its push step skipped, before the repo had a remote; it now passes in full.
 - `RESULTS.md` filled from real runs.
 
 ## Next
-- Push, then watch the first CI run.
+- Nothing. The repo is pushed and the first CI run (#41924310748) passed all three jobs.
 
 ## Blockers
-- No git remote, so nothing is pushed. See below.
+- None.
 
 ## Needs Abhiram
-1. **Push the repo.** The permission system blocked `git remote add origin` twice (reason given: "Remote Repoint"), and I did not work around it. Run these from `1-loanledger`:
-   ```bash
-   git remote add origin https://github.com/abhiramvedipala/loanledger.git
-   ```
-   ```bash
-   git push -u origin main
-   ```
-   Push only `main`, not `git push --all`: see item 3.
-2. **Confirm CI.** The workflow has never run, because it needs the push. The README badge is unverified until the first green run.
-3. **Delete the backup branch when you're happy.** I rebuilt the unpushed history to follow the commit rules. `backup/original-history` holds the original three commits, which contain the attribution lines you don't want:
-   ```bash
-   git branch -D backup/original-history
-   ```
+- Nothing. On 2026-11-04 you approved the push: `main` is on GitHub, `scripts/check.sh` passes with no skip, and the `backup/original-history` branch is deleted.
 
 # Morning summary
 
@@ -46,8 +35,7 @@ SKIP_PUSH_CHECK=1 scripts/check.sh
 ```
 
 ## What is not verified or is limited
-- **`scripts/check.sh` without the skip fails at its last step** until the push is done, so the brief's goal of "check exits 0 and the project is pushed" is not met yet.
-- **GitHub Actions has not run.**
+- `scripts/check.sh` passes in full, including the push step, and the first GitHub Actions run passed.
 - The fresh-clone runs used a fresh clone but shared this machine's Gradle, npm and Docker caches, so they don't prove a first-ever download works.
 - No authentication, and a retried POST can post a payment twice. README "Known limits" has the full list.
 - The p95 is from one laptop, with the load generator, app and database sharing the machine and other containers on the VM at the time. Describe it as a local baseline.
