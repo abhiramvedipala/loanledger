@@ -18,5 +18,5 @@ One line each: decision + why.
 - `kind-up.sh` builds with `--provenance=false` and lets the cluster pull Postgres, because `kind load` fails on Docker's attestation manifests.
 - `kind-up.sh` uses a private kubeconfig, so running it never changes the current kubectl context.
 - The dashboard has no router or chart library, because two pages and one line chart don't justify the dependencies.
-- The unpushed history was rebuilt into small commits starting with `.gitignore`, because the commit rules changed before anything was pushed; the original stays on the local `backup/original-history` branch.
+- The unpushed history was rebuilt into small commits starting with `.gitignore`, because the commit rules changed before anything was pushed; the backup branch of the original was deleted after the push.
 - `CLAUDE.md` stays out of the repo, next to `PROMPT.md`, because both are private working instructions.
