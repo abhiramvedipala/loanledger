@@ -25,8 +25,8 @@ Following one `POST /api/v1/loans/{id}/payments`:
 1. **Validate at the edge.** `LoanController.postPayment` in `src/main/java/com/loanledger/api/LoanController.java` takes a `@Valid` `PaymentRequest`. Bad input becomes an RFC 7807 problem through `ProblemHandler` (`handleMethodArgumentNotValid`, which names each bad field).
 2. **Load and check.** `LoanService.post` in `service/LoanService.java` loads the loan and its escrow account, then `LoanService.compute` rejects a date before origination or a paid-off loan with a 422 (`Problems.unprocessable`).
 3. **Apply the money rules.** `LoanState.apply` in `domain/LoanState.java` is a pure function: interest first, then principal, then escrow, with any extra to principal. A partial payment stops where it runs out and leaves the rest due; a full installment advances the due date through the private `LoanState.installment`. `Amortization.monthlyInterest` and `Amortization.money` in `domain/Amortization.java` do the decimal work.
-4. **Save in one transaction.** Still inside `LoanService.post` (`@Transactional`): `loan.setState`, `escrow.deposit`, and `payments.save(new Payment(...))`. The `Payment` constructor in `domain/Payment.java` derives `amount` from the allocation. The `@Version` column on `Loan` turns a concurrent write into a 409 via `ProblemHandler.concurrentUpdate`.
-5. **The database has the last word.** `src/main/resources/db/migration/V1__create_schema.sql` holds the CHECK constraints (a payment's `amount` must equal principal + interest + escrow; balances cannot go negative). The response is built by `PostingResponse.of` in `api/Dtos.java`.
+4. **Save in one transaction.** Still inside `LoanService.post` (`@Transactional`): `loan.setState`, `escrow.deposit`, and `payments.save(new Payment(...))`. The `Payment` constructor in `domain/Payment.java` derives `amount` from the allocation. The `@Version` column on `Loan` turns a concurrent write into a 409 via `ProblemHandler.concurrentUpdate`. The response is built by `PostingResponse.of` in `api/Dtos.java`.
+5. **The database has the last word.** `src/main/resources/db/migration/V1__create_schema.sql` holds the CHECK constraints (a payment's `amount` must equal principal + interest + escrow; balances cannot go negative)..
 
 The loss-mitigation flow is separate: `LossMitigationService.update` in `service/LossMitigationService.java` asks `LoanStatus.canMoveTo` (`domain/LoanStatus.java`) whether the move is legal, then changes the case and the loan's status in the same transaction. An illegal move is a 409 that lists the allowed next states. `LoanService.simulate` runs the same `compute` as `post` and saves nothing.
 
@@ -41,7 +41,7 @@ There are no merged pull requests (`gh pr list --state merged` returns none) and
 | 3 | Tests | `e6892fe`..`10c4ac6` | Amortization, allocation and state-machine unit tests, Testcontainers integration tests, `scripts/count.sh` | Expected values were checked against a separate Python calculation |
 | 4 | Dashboard | `760cac6`..`e41b235` | Vite, React and TypeScript, typed API client, theme, hand-written SVG chart, loans table and detail | No router and no chart library; the last commit fixes a clipped chart label |
 | 5 | Docker and Kubernetes | `ffc6328`..`2394e69` | Multi-stage Dockerfile, Compose app service, ConfigMap, Postgres StatefulSet, Deployment, HPA, `scripts/kind-up.sh` | Startup probe, no CPU limit, and the script records the pod restart count |
-| 6 | CI | `c4b0e6e`..`c4b0e6e` | GitHub Actions workflow for build and test, and the image build | One commit; CI does not run `check.sh` |
+| 6 | CI | `c4b0e6e` | GitHub Actions workflow for build and test, and the image build | One commit; CI does not run `check.sh` |
 | 7 | Load test and results | `5ccb44a`..`de6d104` | k6 script, `render_results.py`, `scripts/results.sh`, recorded numbers, extended `check.sh` | `RESULTS.md` is generated from `results/`, never hand-edited |
 | 8 | MCP server | `c58c84b`..`b032270` | Three read-only tools, stub-server tests, demo client and transcript, CI job | Only POST is the simulate endpoint; errors pass through `ToolError` |
 | 9 | README | `ab24a2a`..`aaa73e1` | Screenshots, then the README one section per commit; the results table kept in sync by script | `aaa73e1` makes the README table generated too |
@@ -60,7 +60,7 @@ There are no merged pull requests (`gh pr list --state merged` returns none) and
 | `9199901` | feat(api): add loan service | Posting and simulating share one `compute` method, so a simulation cannot disagree with a real post | `service/LoanService.java`, `LoanService.post`, `simulate`, `compute` |
 | `75ab149` | test(domain): cover payment allocation edge cases | Contains the test that pays all 360 installments and ends at zero like the schedule, which backs the rounding claim | `src/test/java/com/loanledger/domain/LoanStateTest.java`, `payingEveryInstallmentEndsExactlyAtMaturityLikeTheSchedule` |
 | `e6892fe` | test(domain): verify amortization against known values | Pins $1,896.20, $382,636.71 and the final $1,900.91, checked with a separate Python calculation | `AmortizationTest.java`, `scheduleFullyRepaysAndTotalInterestMatchesKnownValue` |
-| `c58c84b` | feat(mcp): add read-only MCP server over the REST API | Calls the API instead of the database, and turns API errors into `ToolError` so the reason reaches the client (its message in `8ce7ed4` explains the bug a real client exposed) | `mcp-server/server.py`, `call_api` |
+| `c58c84b` | feat(mcp): add read-only MCP server over the REST API | Calls the API instead of the database, and turns API errors into `ToolError` so the reason reaches the client (`ToolError` exists because of a bug the demo client exposed; see the message of `8ce7ed4`) | `mcp-server/server.py`, `call_api` |
 | `2394e69` | feat(k8s): add scripts/kind-up.sh and record the deploy | Waits for Postgres first because an earlier run restarted pods; records 2/2 ready and 0 restarts in `results/kind.txt` | `scripts/kind-up.sh` |
 | `679f127` | feat(results): add scripts/results.sh and record real numbers | Where the p95, throughput and test counts come from; pairs with `1e319b1`, which renders `RESULTS.md` from raw files | `scripts/results.sh`, `scripts/loadtest.js` |
 
@@ -127,17 +127,11 @@ From the README rounding section: a $300,000 loan at 6.5% over 360 months has a 
 - **Seed tied to the migration history.** Answer: `FLYWAY_LOCATIONS` lets a real deployment leave the seed out.
 - **Load test is one laptop's baseline.** The load generator, app and database shared one machine inside a 4-CPU, 8 GB Colima VM that other containers were using (RESULTS.md). Answer: I call it a local baseline, not a capacity claim.
 - **Fresh-clone runs shared this machine's caches.** They used a fresh clone but this machine's Gradle, npm and Docker caches (PROGRESS.md). Answer: they do not prove a first-ever download works.
-- **Chart axis labels are small on a phone.** The SVG scales down as a whole.
+- **Chart axis labels are small on a phone.** The SVG scales down as a whole. Answer: a known cosmetic limit, listed under README Known limits.
 - **Postgres runs in the cluster for the demo.** Answer: in production I would use a managed database.
 
 The full questions and answers are in [INTERVIEW-NOTES.md](INTERVIEW-NOTES.md).
 
 ## Run it yourself
 
-Prerequisite: Docker. Then:
-
-```bash
-docker compose up --build
-```
-
-Dashboard at <http://localhost:8080/>, Swagger UI at <http://localhost:8080/swagger-ui.html>, health at <http://localhost:8080/actuator/health>. Postgres is published on host port 5433.
+See [README Quick start](../README.md#quick-start). Once it is running, open the dashboard and post a payment, then follow the five steps above in the code.
