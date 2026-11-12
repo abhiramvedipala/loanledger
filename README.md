@@ -210,3 +210,5 @@ All of them are in [DECISIONS.md](DECISIONS.md). The top three:
 ├── docs/              screenshots and interview notes
 └── .github/workflows/ CI
 ```
+
+For a reading order through the code and the commit history, see [docs/STUDY-GUIDE.md](docs/STUDY-GUIDE.md).
